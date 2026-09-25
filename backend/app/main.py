@@ -13,7 +13,7 @@ from app.services.vector_store import LocalVectorStore
 
 settings = get_settings()
 store = LocalVectorStore(settings.index_path)
-gemini = GeminiService(settings.gemini_api_key, settings.gemini_chat_model, settings.gemini_embed_model)
+gemini = GeminiService(settings.gemini_api_key, settings.gemini_chat_model,settings.gemini_fallback_model, settings.gemini_embed_model) 
 rag = RAGService(gemini, store, settings.chunk_size, settings.chunk_overlap, settings.top_k)
 
 app = FastAPI(title="AI RAG Assistant API", version="1.0.0")

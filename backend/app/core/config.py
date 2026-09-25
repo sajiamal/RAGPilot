@@ -5,6 +5,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     gemini_api_key: str
     gemini_chat_model: str = "gemini-3.6-flash"
+    gemini_fallback_model: str = "gemini-2.5-flash"
     gemini_embed_model: str = "gemini-embedding-2"
     frontend_url: str = "http://localhost:4200"
     top_k: int = 5
