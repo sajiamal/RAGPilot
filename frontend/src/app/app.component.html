@@ -1,0 +1,76 @@
+<div class="shell">
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">PORTFOLIO AI PROJECT</div>
+      <h1>AI RAG Assistant</h1>
+      <p>Angular 22 · FastAPI · Gemini · Vector Retrieval</p>
+    </div>
+    <button class="ghost" (click)="clearChat()">New chat</button>
+  </header>
+
+  <main class="layout">
+    <section class="chat-panel card">
+      <div class="chat-header">
+        <div><strong>Conversation</strong><span class="status-dot"></span>Online</div>
+        <span class="muted">Grounded responses with sources</span>
+      </div>
+
+      <div class="messages">
+        <div *ngFor="let message of messages()" class="message" [class.user]="message.role === 'user'" [class.assistant]="message.role === 'assistant'">
+          <div class="avatar">{{ message.role === 'user' ? 'You' : 'AI' }}</div>
+          <div class="bubble">{{ message.content }}</div>
+        </div>
+        <div class="message assistant" *ngIf="loading()">
+          <div class="avatar">AI</div>
+          <div class="bubble typing">Thinking and retrieving context…</div>
+        </div>
+      </div>
+
+      <div class="error" *ngIf="error()">{{ error() }}</div>
+
+      <div class="composer">
+        <textarea
+          [ngModel]="input()"
+          (ngModelChange)="input.set($event)"
+          (keydown)="onKeydown($event)"
+          placeholder="Ask a question…"
+          rows="3"></textarea>
+        <div class="composer-row">
+          <span class="hint">Enter to send · Shift+Enter for a new line</span>
+          <button class="send" [disabled]="loading() || !input().trim()" (click)="send()">Send</button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="sidebar">
+      <section class="card side-card">
+        <div class="side-title"><strong>Knowledge base</strong><span>{{ documents().length }} docs</span></div>
+        <label class="upload">
+          <input type="file" accept=".pdf,.md,.txt" (change)="onFileSelected($event)" [disabled]="uploading()">
+          <span>{{ uploading() ? 'Indexing…' : '＋ Upload PDF / MD / TXT' }}</span>
+        </label>
+        <div *ngIf="documents().length === 0" class="empty">No extra documents uploaded.</div>
+        <div class="doc" *ngFor="let doc of documents()">
+          <div><strong>{{ doc.name }}</strong><small>{{ doc.chunks }} chunks</small></div>
+          <button class="icon" (click)="deleteDocument(doc.name)" title="Delete">×</button>
+        </div>
+      </section>
+
+      <section class="card side-card" *ngIf="sources().length">
+        <div class="side-title"><strong>Retrieved sources</strong><span>Top {{ sources().length }}</span></div>
+        <div class="source" *ngFor="let source of sources()">
+          <div class="source-head"><strong>{{ source.document }}</strong><span>{{ source.score | number:'1.2-2' }}</span></div>
+          <small>Chunk {{ source.chunk_id }}</small>
+          <p>{{ source.preview }}…</p>
+        </div>
+      </section>
+
+      <section class="card side-card pitch">
+        <div class="eyebrow">WHY THIS PROJECT</div>
+        <p>This is not only an LLM chat UI. It demonstrates document ingestion, chunking, embeddings, cosine similarity retrieval, grounded prompting, REST APIs, CORS, file upload, testing and deployment.</p>
+      </section>
+    </aside>
+  </main>
+
+  <footer>Built as an AI-development portfolio project · API keys stay on the backend</footer>
+</div>

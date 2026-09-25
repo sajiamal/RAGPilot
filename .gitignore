@@ -1,23 +1,26 @@
-# Environment variables / secrets
+# environment
 .env
+backend/.env
+backend/.venv/
 
-# Python virtual environment
-.venv/
-venv/
-
-# Python cache
+# Python
 __pycache__/
 *.py[cod]
-
-# Testing/cache
 .pytest_cache/
 
-# Local RAG data
-data/vector_index.json
-data/documents/
+# generated RAG index
+backend/data/vector_index.json
+backend/data/documents/
 
-# IDE / OS files
+# Node
+frontend/node_modules/
+frontend/dist/
+.angular/
+
+# IDE
 .vscode/
 .idea/
+
+# OS
 .DS_Store
 Thumbs.db

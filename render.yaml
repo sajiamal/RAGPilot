@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: ai-rag-assistant-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    plan: free
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_CHAT_MODEL
+        value: gemini-3.8-flash
+      - key: GEMINI_EMBED_MODEL
+        value: gemini-embedding-2
+      - key: FRONTEND_URL
+        value: https://YOUR-NETLIFY-SITE.netlify.app
