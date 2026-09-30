@@ -122,15 +122,20 @@ USER QUESTION:
                         break
 
                     # 429 = quota/rate limit reached.
-                    # Retrying immediately usually will not help.
+                    # Try the fallback model instead.
                     if status_code == 429:
                         print(
-                            f"{model} quota/rate limit reached (429)."
+                            f"{model} quota/rate limit reached (429). "
+                            f"Trying the next configured model."
                         )
-                        raise
 
-                    # 400/401/403/etc. normally indicate a
-                    # configuration/request problem.
+                        # Exit this model's retry loop.
+                        # The outer loop moves to the fallback model.
+                        break
+
+                    # 400/401/403/404/etc. normally indicate a
+                    # configuration/request problem, so don't retry
+                    # or switch models automatically.
                     raise
 
         raise RuntimeError(
