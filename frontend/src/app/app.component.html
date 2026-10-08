@@ -18,7 +18,13 @@
       <div class="messages">
         <div *ngFor="let message of messages()" class="message" [class.user]="message.role === 'user'" [class.assistant]="message.role === 'assistant'">
           <div class="avatar">{{ message.role === 'user' ? 'You' : 'AI' }}</div>
-          <div class="bubble">{{ message.content }}</div>
+          @if (message.role === 'assistant') {
+            <div class="bubble markdown-content"
+                [innerHTML]="message.content | markdown">
+            </div>
+          } @else {
+            <div class="bubble">{{ message.content }}</div>
+          }
         </div>
         <div class="message assistant" *ngIf="loading()">
           <div class="avatar">AI</div>

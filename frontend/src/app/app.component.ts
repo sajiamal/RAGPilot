@@ -3,11 +3,12 @@ import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ChatMessage, ChatService, DocumentInfo, Source } from './chat.service';
+import { MarkdownPipe } from './markdown.pipe';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MarkdownPipe],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
@@ -28,6 +29,7 @@ export class AppComponent {
   constructor() {
     this.loadDocuments();
   }
+
 
   send(): void {
     const message = this.input().trim();
