@@ -7,3 +7,5 @@ numpy==2.3.5
 pypdf==6.0.0
 pytest==8.4.1
 httpx==0.28.1
+psycopg[binary]==3.2.10
+pgvector==0.4.1

@@ -10,9 +10,16 @@ from app.models.schemas import ChatRequest, ChatResponse, DocumentInfo, HealthRe
 from app.services.gemini_service import GeminiService
 from app.services.rag_service import RAGService
 from app.services.vector_store import LocalVectorStore
+from app.services.postgres_vector_store import PostgresVectorStore
 
 settings = get_settings()
-store = LocalVectorStore(settings.index_path)
+
+if settings.database_url:
+    store = PostgresVectorStore(settings.database_url)
+    print("Vector storage: PostgreSQL + pgvector")
+else:
+    store = LocalVectorStore(settings.index_path)
+    print("Vector storage: Local JSON")
 gemini = GeminiService(settings.gemini_api_key, settings.gemini_chat_model,settings.gemini_fallback_model, settings.gemini_embed_model) 
 rag = RAGService(gemini, store, settings.chunk_size, settings.chunk_overlap, settings.top_k)
 

@@ -1,10 +1,18 @@
 from .chunker import chunk_text
 from .gemini_service import GeminiService
 from .vector_store import LocalVectorStore
+from .postgres_vector_store import PostgresVectorStore
 
 
 class RAGService:
-    def __init__(self, gemini: GeminiService, store: LocalVectorStore, chunk_size: int, overlap: int, top_k: int):
+    def __init__(
+    self,
+    gemini: GeminiService,
+    store: LocalVectorStore | PostgresVectorStore,
+    chunk_size: int,
+    overlap: int,
+    top_k: int,
+):
         self.gemini = gemini
         self.store = store
         self.chunk_size = chunk_size

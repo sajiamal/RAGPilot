@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     gemini_chat_model: str = "gemini-3.6-flash"
     gemini_fallback_model: str = "gemini-3.8-flash"
     gemini_embed_model: str = "gemini-embedding-2"
+    database_url: str | None = None
     frontend_url: str = "http://localhost:4200"
     top_k: int = 5
     chunk_size: int = 1000
