@@ -1,3 +1,4 @@
+
 from .chunker import chunk_text
 from .gemini_service import GeminiService
 from .vector_store import LocalVectorStore
@@ -6,13 +7,13 @@ from .postgres_vector_store import PostgresVectorStore
 
 class RAGService:
     def __init__(
-    self,
-    gemini: GeminiService,
-    store: LocalVectorStore | PostgresVectorStore,
-    chunk_size: int,
-    overlap: int,
-    top_k: int,
-):
+        self,
+        gemini: GeminiService,
+        store: LocalVectorStore | PostgresVectorStore,
+        chunk_size: int,
+        overlap: int,
+        top_k: int,
+    ) -> None:
         self.gemini = gemini
         self.store = store
         self.chunk_size = chunk_size
@@ -20,25 +21,47 @@ class RAGService:
         self.top_k = top_k
 
     def index_document(self, name: str, text: str) -> int:
-        chunks = chunk_text(text, self.chunk_size, self.overlap)
+        chunks = chunk_text(
+            text,
+            self.chunk_size,
+            self.overlap,
+        )
+
         if not chunks:
             return 0
+
         embeddings = self.gemini.embed(chunks)
-        self.store.add(name, chunks, embeddings)
+
+        self.store.add(
+            name,
+            chunks,
+            embeddings,
+        )
+
         return len(chunks)
 
-    def chat(self, message: str, history: list[dict]) -> tuple[str, list[dict]]:
+    def retrieve_context(
+        self,
+        message: str,
+    ) -> tuple[str, list[dict]]:
         query_embedding = self.gemini.embed([message])[0]
-        results = self.store.search(query_embedding, self.top_k)
+
+        results = self.store.search(
+            query_embedding,
+            self.top_k,
+        )
 
         context = "\n\n".join(
-            f"[Source: {item['document']} | chunk {item['chunk_id']} | score {item['score']:.3f}]\n{item['text']}"
+            f"[Source: {item['document']} | "
+            f"chunk {item['chunk_id']} | "
+            f"score {item['score']:.3f}]\n"
+            f"{item['text']}"
             for item in results
         )
+
         if not context:
             context = "No documents are currently indexed."
 
-        answer = self.gemini.answer(message, context, history)
         sources = [
             {
                 "document": item["document"],
@@ -48,4 +71,20 @@ class RAGService:
             }
             for item in results
         ]
+
+        return context, sources
+
+    def chat(
+        self,
+        message: str,
+        history: list[dict],
+    ) -> tuple[str, list[dict]]:
+        context, sources = self.retrieve_context(message)
+
+        answer = self.gemini.answer(
+            message,
+            context,
+            history,
+        )
+
         return answer, sources

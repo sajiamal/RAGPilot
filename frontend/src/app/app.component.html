@@ -26,10 +26,14 @@
             <div class="bubble">{{ message.content }}</div>
           }
         </div>
-        <div class="message assistant" *ngIf="loading()">
+      @if (loading() && messages()[messages().length - 1]?.role !== 'assistant') {
+        <div class="message assistant">
           <div class="avatar">AI</div>
-          <div class="bubble typing">Thinking and retrieving context…</div>
+          <div class="bubble typing">
+            Thinking and retrieving context...
+          </div>
         </div>
+      }
       </div>
 
       <div class="error" *ngIf="error()">{{ error() }}</div>

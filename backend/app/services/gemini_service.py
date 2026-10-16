@@ -2,6 +2,7 @@ import time
 
 from google import genai
 from google.genai import errors, types
+from collections.abc import Iterator
 
 
 class GeminiService:
@@ -12,7 +13,12 @@ class GeminiService:
         fallback_model: str,
         embed_model: str,
     ) -> None:
-        self.client = genai.Client(api_key=api_key)
+        self.client = genai.Client(
+    api_key=api_key,
+    http_options=types.HttpOptions(
+        timeout=60000,
+    ),
+)
         self.chat_model = chat_model
         self.fallback_model = fallback_model
         self.embed_model = embed_model
@@ -39,7 +45,7 @@ class GeminiService:
 
         return embeddings
 
-    def answer(
+    def build_prompt(
         self,
         question: str,
         context: str,
@@ -71,6 +77,16 @@ USER QUESTION:
 {question}
 """.strip()
 
+        return prompt
+
+    def answer(
+        self,
+        question: str,
+        context: str,
+        history: list[dict[str, str]],
+    ) -> str:
+        prompt = self.build_prompt(question, context, history)
+
         models_to_try = [
             self.chat_model,
             self.fallback_model,
@@ -98,7 +114,7 @@ USER QUESTION:
                 except errors.APIError as exc:
                     status_code = exc.code
 
-                    # 503 = model temporarily unavailable / overloaded
+                    # Retry when the model is temporarily unavailable.
                     if status_code == 503:
                         if attempt < max_retries - 1:
                             wait_seconds = 3 * (attempt + 1)
@@ -117,27 +133,91 @@ USER QUESTION:
                             f"{max_retries} attempts."
                         )
 
-                        # Exit the retry loop for this model.
-                        # The outer loop then tries the fallback.
+                        # Try the fallback model.
                         break
 
-                    # 429 = quota/rate limit reached.
-                    # Try the fallback model instead.
+                    # Try fallback when quota/rate limit is reached.
                     if status_code == 429:
                         print(
                             f"{model} quota/rate limit reached (429). "
                             f"Trying the next configured model."
                         )
 
-                        # Exit this model's retry loop.
-                        # The outer loop moves to the fallback model.
                         break
 
-                    # 400/401/403/404/etc. normally indicate a
-                    # configuration/request problem, so don't retry
-                    # or switch models automatically.
+                    # Other API errors should be raised immediately.
                     raise
 
         raise RuntimeError(
             "All configured Gemini chat models are temporarily unavailable."
+        )
+
+    
+    def stream_answer(
+        self,
+        question: str,
+        context: str,
+        history: list[dict[str, str]],
+    ) -> Iterator[str]:
+        prompt = self.build_prompt(question, context, history)
+
+        models_to_try = [
+            self.chat_model,
+            self.fallback_model,
+        ]
+
+        max_retries = 3
+
+        for model in models_to_try:
+            for attempt in range(max_retries):
+                started_streaming = False
+
+                try:
+                    stream = self.client.models.generate_content_stream(
+                        model=model,
+                        contents=prompt,
+                        config=types.GenerateContentConfig(
+                            temperature=0.2,
+                            max_output_tokens=800,
+                        ),
+                    )
+
+                    for chunk in stream:
+                        if chunk.text:
+                            started_streaming = True
+                            yield chunk.text
+
+                    return
+
+                except errors.APIError as exc:
+                    # Once text has been sent, switching models could
+                    # produce a duplicated or inconsistent answer.
+                    if started_streaming:
+                        raise
+
+                    if exc.code == 503:
+                        if attempt < max_retries - 1:
+                            wait_seconds = 3 * (attempt + 1)
+
+                            print(
+                                f"{model} streaming unavailable (503). "
+                                f"Retrying in {wait_seconds} seconds..."
+                            )
+
+                            time.sleep(wait_seconds)
+                            continue
+
+                        break
+
+                    if exc.code == 429:
+                        print(
+                            f"{model} streaming quota reached (429). "
+                            f"Trying fallback model."
+                        )
+                        break
+
+                    raise
+
+        raise RuntimeError(
+            "All configured Gemini streaming models are unavailable."
         )
