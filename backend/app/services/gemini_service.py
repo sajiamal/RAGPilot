@@ -115,7 +115,7 @@ USER QUESTION:
                     status_code = exc.code
 
                     # Retry when the model is temporarily unavailable.
-                    if status_code == 503:
+                    if status_code in (503, 504):
                         if attempt < max_retries - 1:
                             wait_seconds = 3 * (attempt + 1)
 

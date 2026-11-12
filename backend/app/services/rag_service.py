@@ -43,6 +43,7 @@ class RAGService:
     def retrieve_context(
         self,
         message: str,
+        tenant_id: UUID,
     ) -> tuple[str, list[dict]]:
         query_embedding = self.gemini.embed([message])[0]
 
